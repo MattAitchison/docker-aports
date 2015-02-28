@@ -20,7 +20,7 @@ source="
 	fix-arm-hackery.patch
 	"
 
-_builddir="$srcdir/$pkgname"
+_builddir="$srcdir"/$pkgname
 _toolrepo=golang.org/x/tools/cmd
 _tooltag=release-branch.go1.4
 
@@ -37,7 +37,7 @@ prepare() {
 build() {
 	export GOPATH="$srcdir"
 	export GOROOT="$_builddir"
-	export GOBIN="$GOROOT/bin"
+	export GOBIN="$GOROOT"/bin
 	export GOROOT_FINAL=/usr/lib/go
 	# ccache breaks build for some reason
 	unset CC
@@ -66,7 +66,7 @@ build() {
 		cd $GOPATH/src/$_toolrepo
 		git checkout $_tooltag
 	)
-	$GOROOT/bin/go build -o $GOPATH/godoc $_toolrepo/godoc
+	$GOROOT/bin/go build -o $GOPATH/src/godoc $_toolrepo/godoc
 	local tool
 	for tool in cover vet; do
 		$GOROOT/bin/go build -o $GOROOT/pkg/tool/${GOOS}_${GOARCH}/${tool} $_toolrepo/${tool}
@@ -77,23 +77,21 @@ package() {
 	local f d
 	cd "$_builddir"
 
+	install -Dm755 "$GOPATH/src/godoc" "$pkgdir/usr/bin/godoc"
+
 
 	install -dm755 "$pkgdir/usr/bin"
-	install -dm755 "$pkgdir/usr/lib/go/src"
+	for f in go gofmt; do
+		install -m755 bin/$f "$pkgdir/usr/bin"
+	done
 
-	install -m755 "$GOPATH/src/godoc" "$pkgdir/usr/bin"
-
-	# ls "$GOPATH"
-	# ls "$GOPATH/bin"
-	# install -m755 "$GOPATH/bin/go" "$pkgdir/usr/bin"
-	# install -m755 "$GOPATH/bin/gofmt" "$pkgdir/usr/bin"
-
+	install -dm755 "$pkgdir/usr/lib/go"
 
 	# The source needs to be installed due to an upstream
 	# bug (http://code.google.com/p/go/issues/detail?id=2775).
 	# When this is resolved we can split out the source to a
 	# go-doc sub package.
-	# install -dm755 "$pkgdir/usr/lib/go/src"
+	install -dm755 "$pkgdir/usr/lib/go/src"
   cp -a bin "$pkgdir/usr"
   cp -a pkg "$pkgdir/usr/lib/go"
   cp -a "$GOROOT/src" "$pkgdir/usr/lib/go/"
@@ -127,18 +125,3 @@ package() {
 # 			"$subpkgdir"/usr/lib/go/src/pkg/$tool/doc.go
 # 	done
 # }
-md5sums="907f85c8fa765d31f7f955836fec4049  go1.4.2.src.tar.gz
-65330c61f6d6c881033b0a95ca228edb  no-werror.patch
-4391be88ce8bacdd7fee433b39635583  no-pic.patch
-93ad940db4a6d51e086f80755eaa8f53  no-longjmp-redefine.patch
-81ac9f3188df7a0c16c52cc4d8cc1ffa  fix-arm-hackery.patch"
-sha256sums="299a6fd8f8adfdce15bc06bde926e7b252ae8e24dd5b16b7d8791ed79e7b5e9b  go1.4.2.src.tar.gz
-65d38b9485da2ff9417a2c44a81b6e52cc9bd2727b27e7add10d48a63805d4a3  no-werror.patch
-86fc68a50bc4a9336a003239adf1dcc6d7cabfb9c1bcf09b0d53d09100ceff12  no-pic.patch
-084020e0eb6cb0aceee047bd5962872ed51dbb45465174018d108eb195c26605  no-longjmp-redefine.patch
-fced8436d9c32a43a5cc87f2243529e7a8209ba73a9afd4fd7733245bc55e4e3  fix-arm-hackery.patch"
-sha512sums="cda1a29d4418875dffaf3324004ddae8e1bbb573f7668e6e0c03d8b61284f4db7fca244c181f2859f8ccdd3db6391fb21e0d98a1a9fc15096c15883249d48a9c  go1.4.2.src.tar.gz
-3cf139723e6ff0cbf7aaf76295fe4208f2062f2d4086e36d05cad83919217b5355e0e79b0b515a06a578389301bd07b062cb58b98fc0f9e4badf190cd1c34826  no-werror.patch
-a8e95c3c536a30e15b9bad5e623a085c521739639a58ac638679d99413a1bee8823729783123cbe4495ac42822df31f4776f0380a63786b9f4fc73190e012ae5  no-pic.patch
-3a9b665f8fda89729c4c269ea82f82ee515f0026d26f1d51e2cf84054456e394afc14875e7ed29280a12488907d50c70af313e2e4a5b62c328bbade098db9d4d  no-longjmp-redefine.patch
-573146b72c980af5e41540fd7912b5579b050e41ac9d808e8d14268cf0a0fa1a70e6fade85011c0f18f1a428bc95b225d8b8345be1c50656dc69046ef1eb0b40  fix-arm-hackery.patch"
